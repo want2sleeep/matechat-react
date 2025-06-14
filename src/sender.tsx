@@ -5,6 +5,8 @@ import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import type { Backend } from "./utils";
+import PublishNew from "./icons/publish-new.svg";
+import QuickStop from "./icons/quick-stop.svg";
 
 export function SenderButton({
   className,
@@ -16,7 +18,7 @@ export function SenderButton({
       data-slot="sender-button"
       className={twMerge(
         clsx(
-          "flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 hover:bg-blue-500/90 p-3 text-white",
+          "flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 hover:bg-blue-500/90 text-white",
           className,
         ),
       )}
@@ -104,9 +106,9 @@ export function Sender({
         </div>
         <SenderButton onClick={handleSend}>
           {isSending ? (
-            <i className="icon icon-quick-stop" />
+            <img className="filter brightness-0 invert" src={QuickStop} />
           ) : (
-            <i className="icon icon-publish-new" />
+            <img className="filter brightness-0 invert" src={PublishNew} />
           )}
         </SenderButton>
       </div>
