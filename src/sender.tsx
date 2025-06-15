@@ -4,9 +4,9 @@ import "@devui-design/icons/icomoon/devui-icon.css";
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
-import type { Backend } from "./utils";
 import PublishNew from "./icons/publish-new.svg";
 import QuickStop from "./icons/quick-stop.svg";
+import type { Backend } from "./utils";
 
 export function SenderButton({
   className,
@@ -106,9 +106,17 @@ export function Sender({
         </div>
         <SenderButton onClick={handleSend}>
           {isSending ? (
-            <img className="filter brightness-0 invert" src={QuickStop} />
+            <img
+              className="filter brightness-0 invert"
+              src={QuickStop}
+              alt="icon-quick-stop"
+            />
           ) : (
-            <img className="filter brightness-0 invert" src={PublishNew} />
+            <img
+              className="filter brightness-0 invert"
+              src={PublishNew}
+              alt="icon-publish-new"
+            />
           )}
         </SenderButton>
       </div>
