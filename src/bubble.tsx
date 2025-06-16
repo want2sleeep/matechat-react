@@ -223,7 +223,10 @@ export function BubbleList({
   // biome-ignore lint/correctness/useExhaustiveDependencies: This effect runs only when messages change
   useEffect(() => {
     if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+      lastMessageRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
     }
   }, [messages]);
 

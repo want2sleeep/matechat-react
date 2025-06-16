@@ -1,5 +1,4 @@
 import "./tailwind.css";
-import "@devui-design/icons/icomoon/devui-icon.css";
 
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
@@ -32,7 +31,7 @@ export interface SenderProps extends React.ComponentProps<"div"> {
   placeholder?: string;
   input: Backend["input"];
   onMessageChange?: (message: string) => void;
-  onSend?: () => void;
+  onSend?: (controller: AbortController) => void;
 }
 export function Sender({
   className,
@@ -56,21 +55,30 @@ export function Sender({
     onMessageChange?.(message || "");
   }, [message]);
 
+  const [controller, setController] = useState<AbortController | null>(null);
   const handleSend = () => {
+    if (isSending) {
+      setIsSending(false);
+      return controller?.abort();
+    }
+
     if (message.trim() === "") return;
     setIsSending(true);
+    const newController = new AbortController();
+    setController(newController);
     const maybePromise = input(message, {
       callbacks: {
         onFinish: () => setIsSending(false),
       },
+      signal: newController.signal,
     });
     setMessage("");
     if (maybePromise instanceof Promise) {
       maybePromise.then(() => {
-        onSend?.();
+        onSend?.(newController);
       });
     } else {
-      onSend?.();
+      onSend?.(newController);
     }
   };
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {

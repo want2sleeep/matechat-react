@@ -26,6 +26,11 @@ export interface InputOptions {
    */
   messages?: MessageParam[];
   /**
+   * An AbortController instance that can be used to abort the input process.
+   * @default undefined
+   */
+  signal?: AbortSignal;
+  /**
    * Optional callbacks for handling input, chunk, error, and finish events.
    * These callbacks only apply to the `input` method and are not registered
    * globally on the backend.
@@ -85,17 +90,25 @@ export class OpenAIBackend implements Backend {
     });
     options?.callbacks?.onInput?.(prompt);
     const { messages } = options || {};
+
+    if (options?.signal?.aborted) return;
+
     try {
-      const response = await this.instance.chat.completions.create({
-        model: this.config.model || "gpt-3.5-turbo",
-        messages: messages
-          ? [...messages, { role: "user", content: prompt }]
-          : [{ role: "user", content: prompt }],
-        ...this.config,
-        stream: true,
-        max_completion_tokens: this.config.maxTokens,
-        response_format: { type: "text" },
-      });
+      const response = await this.instance.chat.completions.create(
+        {
+          model: this.config.model || "gpt-3.5-turbo",
+          messages: messages
+            ? [...messages, { role: "user", content: prompt }]
+            : [{ role: "user", content: prompt }],
+          ...this.config,
+          stream: true,
+          max_completion_tokens: this.config.maxTokens,
+          response_format: { type: "text" },
+        },
+        {
+          signal: options?.signal,
+        },
+      );
       for await (const chunk of response) {
         const chunkMessage = chunk.choices[0].delta.content || "";
         this.emitter.emit("chunk", {
@@ -104,6 +117,7 @@ export class OpenAIBackend implements Backend {
           payload: { chunk: chunkMessage },
         });
         options?.callbacks?.onChunk?.(chunkMessage);
+        if (options?.signal?.aborted) return;
       }
     } catch (error) {
       this.emitter.emit("error", {
