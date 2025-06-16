@@ -1,9 +1,10 @@
 import "./tailwind.css";
-import "@devui-design/icons/icomoon/devui-icon.css";
 
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
+import PublishNew from "./icons/publish-new.svg";
+import QuickStop from "./icons/quick-stop.svg";
 import type { Backend } from "./utils";
 
 export function SenderButton({
@@ -16,7 +17,7 @@ export function SenderButton({
       data-slot="sender-button"
       className={twMerge(
         clsx(
-          "flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 hover:bg-blue-500/90 p-3 text-white",
+          "flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 hover:bg-blue-500/90 text-white",
           className,
         ),
       )}
@@ -30,7 +31,7 @@ export interface SenderProps extends React.ComponentProps<"div"> {
   placeholder?: string;
   input: Backend["input"];
   onMessageChange?: (message: string) => void;
-  onSend?: () => void;
+  onSend?: (controller: AbortController) => void;
 }
 export function Sender({
   className,
@@ -54,21 +55,30 @@ export function Sender({
     onMessageChange?.(message || "");
   }, [message]);
 
+  const [controller, setController] = useState<AbortController | null>(null);
   const handleSend = () => {
+    if (isSending) {
+      setIsSending(false);
+      return controller?.abort();
+    }
+
     if (message.trim() === "") return;
     setIsSending(true);
+    const newController = new AbortController();
+    setController(newController);
     const maybePromise = input(message, {
       callbacks: {
         onFinish: () => setIsSending(false),
       },
+      signal: newController.signal,
     });
     setMessage("");
     if (maybePromise instanceof Promise) {
       maybePromise.then(() => {
-        onSend?.();
+        onSend?.(newController);
       });
     } else {
-      onSend?.();
+      onSend?.(newController);
     }
   };
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -104,9 +114,17 @@ export function Sender({
         </div>
         <SenderButton onClick={handleSend}>
           {isSending ? (
-            <i className="icon icon-quick-stop" />
+            <img
+              className="filter brightness-0 invert"
+              src={QuickStop}
+              alt="icon-quick-stop"
+            />
           ) : (
-            <i className="icon icon-publish-new" />
+            <img
+              className="filter brightness-0 invert"
+              src={PublishNew}
+              alt="icon-publish-new"
+            />
           )}
         </SenderButton>
       </div>
